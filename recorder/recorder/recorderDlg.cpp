@@ -67,6 +67,7 @@ BEGIN_MESSAGE_MAP(CMFCApplication1Dlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_WEBCAM, &CMFCApplication1Dlg::OnBnClickedButtonWebcam)
 	ON_WM_POWERBROADCAST()
 	ON_BN_CLICKED(IDC_BUTTON_LOOPBACK, &CMFCApplication1Dlg::OnBnClickedButtonLoopback)
+	ON_WM_INPUT()
 END_MESSAGE_MAP()
 
 
@@ -107,6 +108,8 @@ BOOL CMFCApplication1Dlg::OnInitDialog()
 	m_loopbackProducer.reset(new CAudioProducer(true));
 	m_loopbackConsumer.reset(new CAudioConsumer("c:\\DataLogs\\audio\\test_loopback"));
 	m_video.reset(new COpenCVRecorder);
+
+	registerDevices();
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -250,4 +253,67 @@ UINT CMFCApplication1Dlg::OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData)
 
 	}
 	return CDialogEx::OnPowerBroadcast(nPowerEvent, nEventData);
+}
+
+
+void CMFCApplication1Dlg::OnRawInput(UINT nInputcode, HRAWINPUT hRawInput)
+{
+	// This feature requires Windows XP or greater.
+	// The symbol _WIN32_WINNT must be >= 0x0501.
+	// TODO: Add your message handler code here and/or call default
+
+	UINT dwSize;
+
+	GetRawInputData(hRawInput, RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER));
+	LPBYTE lpb = new BYTE[dwSize];
+	if (lpb == NULL)
+	{
+		return;
+	}
+
+	if (GetRawInputData(hRawInput, RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER)) != dwSize)
+		OutputDebugString(TEXT("GetRawInputData does not return correct size !\n"));
+
+	RAWINPUT* raw = (RAWINPUT*)lpb;
+
+	int q;
+	if (raw->header.dwType == RIM_TYPEKEYBOARD)
+	{
+		q = 1;
+		/*hResult = StringCchPrintf(szTempOutput, STRSAFE_MAX_CCH, TEXT(" Kbd: make=%04x Flags:%04x Reserved:%04x ExtraInformation:%08x, msg=%04x VK=%04x \n"),
+			raw->data.keyboard.MakeCode,
+			raw->data.keyboard.Flags,
+			raw->data.keyboard.Reserved,
+			raw->data.keyboard.ExtraInformation,
+			raw->data.keyboard.Message,
+			raw->data.keyboard.VKey);
+		if (FAILED(hResult))
+		{
+			// TODO: write error handler
+		}
+		OutputDebugString(szTempOutput);*/
+	}
+	else if (raw->header.dwType == RIM_TYPEMOUSE)
+	{
+		q = 1;
+		/*hResult = StringCchPrintf(szTempOutput, STRSAFE_MAX_CCH, TEXT("Mouse: usFlags=%04x ulButtons=%04x usButtonFlags=%04x usButtonData=%04x ulRawButtons=%04x lLastX=%04x lLastY=%04x ulExtraInformation=%04x\r\n"),
+			raw->data.mouse.usFlags,
+			raw->data.mouse.ulButtons,
+			raw->data.mouse.usButtonFlags,
+			raw->data.mouse.usButtonData,
+			raw->data.mouse.ulRawButtons,
+			raw->data.mouse.lLastX,
+			raw->data.mouse.lLastY,
+			raw->data.mouse.ulExtraInformation);
+
+		if (FAILED(hResult))
+		{
+			// TODO: write error handler
+		}
+		OutputDebugString(szTempOutput);*/
+	}
+
+	delete[] lpb;
+
+	CDialogEx::OnRawInput(nInputcode, hRawInput);
 }

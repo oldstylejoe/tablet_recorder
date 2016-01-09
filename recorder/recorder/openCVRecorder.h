@@ -83,9 +83,15 @@ private:
 	//open up the webcam
 	void createVideo() {
 		m_shutdown = false;
-		m_vcap.reset(new cv::VideoCapture(1));
+		//1 is the facing camera on the Surface
+		m_vcap.reset(new cv::VideoCapture(0));
 		if (!m_vcap->isOpened()) {
-			throw std::runtime_error("Error opening webcam stream");
+			//try to fallback to the default camera
+			m_vcap->release();
+			m_vcap.reset(new cv::VideoCapture(0));
+			if (!m_vcap->isOpened()) {
+				throw std::runtime_error("Error opening webcam stream");
+			}
 		}
 		m_frameWidth = m_vcap->get(CV_CAP_PROP_FRAME_WIDTH);
 		m_frameHeight = m_vcap->get(CV_CAP_PROP_FRAME_HEIGHT);
@@ -116,6 +122,53 @@ private:
 
 	}
 
+	//stolen from sourceforge: http://stackoverflow.com/questions/14148758/how-to-capture-the-desktop-in-opencv-ie-turn-a-bitmap-into-a-mat
+	//returns the current screen
+	void capScreen(cv::Mat& src, const int width, const int height) {
+
+		HDC hwindowDC, hwindowCompatibleDC;
+
+		int srcheight, srcwidth;
+		HBITMAP hbwindow;
+		BITMAPINFOHEADER  bi;
+
+		//HWND hwnd = GetDesktopWindow();
+		hwindowDC = GetDC(NULL);
+		hwindowCompatibleDC = CreateCompatibleDC(hwindowDC);
+		SetStretchBltMode(hwindowCompatibleDC, COLORONCOLOR);
+
+		//RECT windowsize;    // get the height and width of the screen
+		//GetClientRect(hwnd, &windowsize);
+
+		srcheight = GetSystemMetrics(SM_CXSCREEN);// windowsize.bottom;
+		srcwidth = GetSystemMetrics(SM_CYSCREEN);// windowsize.right;
+
+		//src.create(height, width, CV_8UC4);
+
+		// create a bitmap
+		hbwindow = CreateCompatibleBitmap(hwindowDC, width, height);
+		bi.biSize = sizeof(BITMAPINFOHEADER);    //http://msdn.microsoft.com/en-us/library/windows/window/dd183402%28v=vs.85%29.aspx
+		bi.biWidth = width;
+		bi.biHeight = -height;  //this is the line that makes it draw upside down or not
+		bi.biPlanes = 1;
+		bi.biBitCount = 32;
+		bi.biCompression = BI_RGB;
+		bi.biSizeImage = 0;
+		bi.biXPelsPerMeter = 0;
+		bi.biYPelsPerMeter = 0;
+		bi.biClrUsed = 0;
+		bi.biClrImportant = 0;
+
+		// use the previously created device context with the bitmap
+		SelectObject(hwindowCompatibleDC, hbwindow);
+		// copy from the window device context to the bitmap device context
+		StretchBlt(hwindowCompatibleDC, 0, 0, width, height, hwindowDC, 0, 0, srcwidth, srcheight, SRCCOPY); //change SRCCOPY to NOTSRCCOPY for wacky colors !
+		GetDIBits(hwindowCompatibleDC, hbwindow, 0, height, src.data, (BITMAPINFO *)&bi, DIB_RGB_COLORS);  //copy from hwindowCompatibleDC to hbwindow
+
+																										   // avoid memory leak
+		DeleteObject(hbwindow); DeleteDC(hwindowCompatibleDC); ReleaseDC(NULL, hwindowDC);
+	}
+
 	void doVideo() {
 		m_going = true;
 		int fontFace = cv::FONT_HERSHEY_PLAIN;
@@ -126,14 +179,16 @@ private:
 		FILETIME ftStart, ftStop;
 		char buf[1024];
 
-		cv::Mat frame;
+		cv::Mat frame, screen, join;
 		int frames = 0;
 		while (!m_shutdown) {
-			GetSystemTimePreciseAsFileTime(&ftStart);
 			//m_vcap->operator>>(frame);
 			if (m_vcap->grab()) {
-				GetSystemTimePreciseAsFileTime(&ftStop);
+				GetSystemTimePreciseAsFileTime(&ftStart);
 				m_vcap->retrieve(frame);
+				GetSystemTimePreciseAsFileTime(&ftStop);
+				//screen = frame.clone();
+				//capScreen(screen, m_frameWidth, m_frameHeight);
 
 				timestamp = m_vcap->get(CV_CAP_PROP_POS_MSEC);
 				sprintf_s(buf, "%lu%lu",
@@ -141,10 +196,16 @@ private:
 				cv::putText(frame, buf, cv::Point(30, 30), fontFace, fontScale, cv::Scalar(200, 200, 250), 3, CV_AA);
 				sprintf_s(buf, "%lu%lu",
 					ftStop.dwHighDateTime, ftStop.dwLowDateTime);
-				cv::putText(frame, buf, cv::Point(30, 60), fontFace, fontScale, cv::Scalar(200, 200, 250), 3, CV_AA);
-				sprintf_s(buf, "%10.9g", timestamp);
-				cv::putText(frame, buf, cv::Point(30, 90), fontFace, fontScale, cv::Scalar(200, 200, 250), 3, CV_AA);
+				cv::putText(screen, buf, cv::Point(30, 30), fontFace, fontScale, cv::Scalar(200, 200, 250), 3, CV_AA);
 
+				/*try
+				{
+					cv::vconcat(frame, screen, join);
+				}
+				catch (cv::Exception & e)
+				{
+					cout << e.what() << endl;
+				}*/
 				++frames;
 				if (frames > FRAMES_PER_VIDEO) {
 					frames = 0;
