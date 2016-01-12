@@ -202,6 +202,7 @@
   <ItemGroup>
     <ClInclude Include="AudioConsumer.h" />
     <ClInclude Include="AudioProducer.h" />
+    <ClInclude Include="InputConsumer.h" />
     <ClInclude Include="recorder.h" />
     <ClInclude Include="recorderDlg.h" />
     <ClInclude Include="minilzo.h" />
@@ -209,6 +210,7 @@
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SafeFile.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="surface_touch_screen.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="threadQueue.h" />
   </ItemGroup>
@@ -230,6 +232,7 @@
     <None Include="res\recorder.rc2" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="res\MFCApplication1.ico" />
     <Image Include="res\recorder.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

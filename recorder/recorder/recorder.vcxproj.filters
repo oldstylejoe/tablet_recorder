@@ -51,12 +51,15 @@
     <ClInclude Include="recorderDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="surface_touch_screen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InputConsumer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\lib\native\src\snappy-single-file.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="recorder.cpp">
@@ -79,6 +82,9 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\recorder.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\MFCApplication1.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

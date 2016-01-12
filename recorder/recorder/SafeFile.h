@@ -191,4 +191,100 @@ private:
 
 };
 
+
+//This class does the same as safefile, but can handle arbitrary output types.
+//This has no compression.
+//Use it for data that comes in relatively slowly (like touches).
+//type T must specify a ToString function.
+template<class T>
+class CSafeArbFile {
+	vector<T> m_buf;
+	vector<T> m_writeBuf;
+	atomic_bool m_workerBusy;
+	shared_ptr<thread> m_worker;
+
+	mutex m_Blocker;
+
+public:
+	string m_base;
+	string m_name;
+
+	CSafeArbFile(const string& inBase) : m_base(inBase) {
+		m_workerBusy = false;
+	}
+	~CSafeArbFile() {
+		if (m_worker && m_worker->joinable()) {
+			m_worker->join();
+		}
+		startSave();
+		if (m_worker && m_worker->joinable()) {
+			m_worker->join();
+		}
+	}
+
+public:
+	void write(const T& x) {
+		m_buf.push_back(x);
+		if (shouldSave()) {
+			startSave();
+		}
+	}
+
+	//read the queue
+	void flush() {
+		if (m_worker && m_worker->joinable()) {
+			m_worker->join();
+		}
+		startSave();
+	}
+
+private:
+
+	//startup the thread to read the queue and write the file
+	void startSave() {
+		SafeFile::CreateSafeTimeFileName(m_base, "txt", m_name);
+		//this makes an extra copy (I think)
+		//the unique_lock is so I can delete m_buf
+		unique_lock<mutex> lock(m_Blocker);
+		m_writeBuf.insert(m_writeBuf.end(), m_buf.begin(), m_buf.end());
+		m_buf.clear();
+		lock.unlock();
+		if (!m_workerBusy) {
+			if (m_worker && m_worker->joinable()) {
+				m_worker->join();
+			}
+			m_worker.reset(new thread(&CSafeArbFile::doSave, this));
+		}
+	}
+
+	//enough in the buffer to be worth it and worker is free
+	//this is tweakable
+	bool shouldSave() {
+		return !m_workerBusy && m_buf.size() > WRITE_SIZE;
+	}
+
+	void doSave() {
+		m_workerBusy = true;
+		//TODO make this into a compressed file type
+		//using snappy (7/15). output format is a binary unsigned long that contains the length of the compressed
+		//   snappy sequence coming up, n. Then, the compressed snappy sequence. Read n bytes and decompress to use.
+		ofstream fil(m_name.c_str(), ofstream::app);
+		//ofstream ftest("test_safe_file.txt", ofstream::app);
+		if (fil.good()) {
+			unique_lock<mutex> lock(m_Blocker);
+			for (auto s : m_writeBuf) {
+				fil << s.ToString() << "\n";
+			}
+			m_writeBuf.clear();
+			lock.unlock();
+
+		}
+		else {
+			//TODO: throw an error here
+		}
+		m_workerBusy = false;
+	}
+
+};
+
 #endif// SAFE_FILE

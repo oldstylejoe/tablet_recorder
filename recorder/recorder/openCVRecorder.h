@@ -84,7 +84,7 @@ private:
 	void createVideo() {
 		m_shutdown = false;
 		//1 is the facing camera on the Surface
-		m_vcap.reset(new cv::VideoCapture(0));
+		m_vcap.reset(new cv::VideoCapture(1));
 		if (!m_vcap->isOpened()) {
 			//try to fallback to the default camera
 			m_vcap->release();
@@ -191,11 +191,11 @@ private:
 				//capScreen(screen, m_frameWidth, m_frameHeight);
 
 				timestamp = m_vcap->get(CV_CAP_PROP_POS_MSEC);
-				sprintf_s(buf, "%lu%lu",
-					ftStart.dwHighDateTime, ftStart.dwLowDateTime);
+				sprintf_s(buf, "%I64u",
+					((__int64)ftStart.dwHighDateTime) << 32 | (__int64)ftStart.dwLowDateTime);
 				cv::putText(frame, buf, cv::Point(30, 30), fontFace, fontScale, cv::Scalar(200, 200, 250), 3, CV_AA);
-				sprintf_s(buf, "%lu%lu",
-					ftStop.dwHighDateTime, ftStop.dwLowDateTime);
+				sprintf_s(buf, "%I64u",
+					((__int64)ftStop.dwHighDateTime) << 32 | (__int64)ftStop.dwLowDateTime);
 				cv::putText(screen, buf, cv::Point(30, 30), fontFace, fontScale, cv::Scalar(200, 200, 250), 3, CV_AA);
 
 				/*try

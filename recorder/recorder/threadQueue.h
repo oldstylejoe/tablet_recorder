@@ -26,13 +26,16 @@ public:
 		return item;
 	}
 
-	void pop(T& item)
+	//use like: while(pop(val)) {//do something}
+	bool pop(T& item)
 	{
 		std::unique_lock<std::mutex> mlock(mutex_);
 		if (!queue_.empty()) {
 			item = queue_.front();
 			queue_.pop_front();
+			return true;
 		}
+		return false;
 	}
 
 	void push(const T& item)

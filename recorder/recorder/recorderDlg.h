@@ -9,7 +9,8 @@
 #include "AudioProducer.h"
 #include "AudioConsumer.h"
 #include "openCVRecorder.h"
-#include "surface_touch_screen.h"
+#include "InputConsumer.h"
+//#include "surface_touch_screen.h"
 
 // CMFCApplication1Dlg dialog
 class CMFCApplication1Dlg : public CDialogEx
@@ -19,6 +20,7 @@ class CMFCApplication1Dlg : public CDialogEx
 	std::shared_ptr<CAudioProducer> m_loopbackProducer;
 	std::shared_ptr<CAudioConsumer> m_loopbackConsumer;
 	std::shared_ptr<COpenCVRecorder> m_video;
+	std::shared_ptr<CInputConsumer> m_inputConsumer;
 	CStatic m_labelAudio;
 
 // Construction
@@ -52,24 +54,25 @@ public:
 	void registerDevices() {
 		RAWINPUTDEVICE Rid[3];
 
-		Rid[0].usUsagePage = 0x01;
-		Rid[0].usUsage = 0x02;
-		Rid[0].dwFlags = RIDEV_INPUTSINK;   // adds HID mouse and also ignores legacy mouse messages
+		Rid[0].usUsagePage = 13;
+		Rid[0].usUsage = 4;
+		Rid[0].dwFlags = RIDEV_INPUTSINK;   // adds surface touch screen
 		Rid[0].hwndTarget = m_hWnd;
 
 		Rid[1].usUsagePage = 0x01;
-		Rid[1].usUsage = 0x06;
-		Rid[1].dwFlags = RIDEV_INPUTSINK;   // adds HID keyboard and also ignores legacy keyboard messages
+		Rid[1].usUsage = 0x02;
+		Rid[1].dwFlags = RIDEV_INPUTSINK;   // adds HID mouse and also ignores legacy mouse messages
 		Rid[1].hwndTarget = m_hWnd;
 
-		Rid[1].usUsagePage = 13;
-		Rid[1].usUsage = 4;
-		Rid[1].dwFlags = RIDEV_INPUTSINK;   // adds surface touch screen
-		Rid[1].hwndTarget = m_hWnd;
+		Rid[2].usUsagePage = 0x01;
+		Rid[2].usUsage = 0x06;
+		Rid[2].dwFlags = RIDEV_INPUTSINK;   // adds HID keyboard and also ignores legacy keyboard messages
+		Rid[2].hwndTarget = m_hWnd;
 
 		if (RegisterRawInputDevices(Rid, 3, sizeof(Rid[0])) == FALSE)
 		{
 			DWORD err = GetLastError();
 		}
 	}
+	afx_msg void OnBnClickedButton4();
 };
