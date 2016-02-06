@@ -114,7 +114,8 @@ private:
 		}
 
 		//m_video.reset(new cv::VideoWriter(fname, CV_FOURCC('M', 'J', 'P', 'G'), FRAME_RATE, cv::Size(m_frameWidth, m_frameHeight), true));
-		m_video.reset(new cv::VideoWriter(fname, CV_FOURCC('D', 'I', 'V', 'X'), FRAME_RATE, cv::Size(m_frameWidth, m_frameHeight), true));
+		//m_video.reset(new cv::VideoWriter(fname, CV_FOURCC('D', 'I', 'V', 'X'), FRAME_RATE, cv::Size(m_frameWidth, m_frameHeight), true));
+		m_video.reset(new cv::VideoWriter(fname, CV_FOURCC('C', 'V', 'I', 'D'), FRAME_RATE, cv::Size(m_frameWidth, m_frameHeight), true));
 		//m_video.reset(new cv::VideoWriter(fname, -1, FRAME_RATE, cv::Size(m_frameWidth, m_frameHeight), true));
 		if (!m_video->isOpened()) {
 			throw std::runtime_error("Error opening video file stream");
