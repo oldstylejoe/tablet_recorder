@@ -269,9 +269,9 @@ private:
 									//	chunk[k].assign(&audioValues[k*channels], &audioValues[(k + 1)*channels]);
 									//m_data.push(chunk);
 
-									vector<float> audio(numFramesAvailable);
+									vector<float> audio(channels*numFramesAvailable);
 									float* audioF = reinterpret_cast<float*>(pData);
-									for (int i = 0; i < numFramesAvailable; ++i) {
+									for (int i = 0; i < channels*numFramesAvailable; ++i) {
 										audio[i] = audioF[i];
 									}
 									m_data.push(audio);
